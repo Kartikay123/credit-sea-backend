@@ -8,9 +8,18 @@ import { notFound, errorHandler } from './middleware/error';
 
 const app = express();
 
+const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:3000')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
+    origin: (origin, cb) => {
+      // allow no-origin (curl, server-to-server) and listed origins
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      return cb(new Error(`CORS: origin ${origin} not allowed`));
+    },
     credentials: true,
   })
 );
